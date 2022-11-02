@@ -1257,7 +1257,7 @@ Proof.
   - destruct c eqn:Ec.
     + reflexivity.
     + reflexivity.
-  - destruct c eqn:Ec
+  - destruct c eqn:Ec.
     + reflexivity.
     + reflexivity.
 Qed.
@@ -1323,7 +1323,15 @@ Qed.
 Theorem andb_true_elim2 : forall b c : bool,
   andb b c = true -> c = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b c. destruct b eqn: Eb.
+  - destruct c eqn: Ec.
+    + reflexivity.
+    + intros H. rewrite <- H. reflexivity.
+  - destruct c eqn: Ec.
+    + intros H. reflexivity.
+    + intros H. rewrite <- H. reflexivity.
+Qed.
+      
 (** [] *)
 
 (** Before closing the chapter, let's mention one final
@@ -1364,7 +1372,11 @@ Qed.
 Theorem zero_nbeq_plus_1 : forall n : nat,
   0 =? (n + 1) = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros [|n].
+  - reflexivity.
+  - reflexivity.
+Qed.
+
 (** [] *)
 
 (* ================================================================= *)
@@ -1448,7 +1460,14 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
     out your solution so that it doesn't cause Coq to reject the whole
     file!) *)
 
+
 (* FILL IN HERE
+
+Fixpoint plus'' (n : nat) (m : nat) : nat :=
+  match n with
+  | O => m
+  | S n' => plus'' (n - 1) m
+  end.
 
     [] *)
 
@@ -1465,7 +1484,11 @@ Theorem identity_fn_applied_twice :
   (forall (x : bool), f x = x) ->
   forall (b : bool), f (f b) = b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros f fxx b.
+  rewrite -> fxx.
+  rewrite -> fxx.
+  reflexivity.
+Qed.
 
 (** [] *)
 
@@ -1474,6 +1497,18 @@ Proof.
     Now state and prove a theorem [negation_fn_applied_twice] similar
     to the previous one but where the second hypothesis says that the
     function [f] has the property that [f x = negb x]. *)
+
+Theorem negation_fn_applied_twice :
+  forall (f : bool -> bool),
+  (forall (x : bool), f x = negb x) ->
+  forall (b : bool), f (f b) = b.
+Proof.
+  intros f fxx b.
+  rewrite -> fxx.
+  rewrite -> fxx.
+  rewrite negb_involutive.
+  reflexivity.
+Qed.
 
 (* FILL IN HERE *)
 
@@ -1495,6 +1530,7 @@ Theorem andb_eq_orb :
   (andb b c = orb b c) ->
   b = c.
 Proof.
+  intros b c.
   (* FILL IN HERE *) Admitted.
 
 (** [] *)
