@@ -62,7 +62,7 @@ Theorem silly2a : forall (n m : nat),
   [n] = [m].
 Proof.
   intros n m eq1 eq2.
-  apply eq2. apply eq1.  Qed.
+  apply eq2. apply eq1.  Qed. 
 
 (** **** Exercise: 2 stars, standard, optional (silly_ex)
 
@@ -73,7 +73,10 @@ Theorem silly_ex : forall p,
   even p = true ->
   odd (S p) = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros p eq1 eq2 eq3.
+  apply eq2. apply eq1. apply eq3.
+Qed.
+
 (** [] *)
 
 (** To use the [apply] tactic, the (conclusion of the) fact
@@ -108,7 +111,11 @@ Theorem rev_exercise1 : forall (l l' : list nat),
   l = rev l' ->
   l' = rev l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l l' leq.
+  replace (l) with (rev l').
+  symmetry. apply rev_involutive.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (apply_rewrite)
@@ -119,7 +126,16 @@ Proof.
 
 (* FILL IN HERE
 
-    [] *)
+Apply will rewrite and automatically use reflexivity to check for
+equality in a goal, but requires that the goal match the conclusion of
+the rule which is applied exactly. Rewrite allows specifying the
+direction of the rule application. Rewrite doesn't simplify or check
+for equality which can be useful if a non-simplified state helps to
+make progress in reaching a goal. Rewrite doesn't require that the
+goal match the rewrite rule exactly and it can be applied to
+subexpressions in an expression.
+
+[] *)
 
 (* ################################################################# *)
 (** * The [apply with] Tactic *)
@@ -191,7 +207,11 @@ Example trans_eq_exercise : forall (n m o p : nat),
      (n + p) = m ->
      (n + p) = (minustwo o).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o p eq1 eq2.
+  transitivity m.
+  apply eq2. apply eq1.
+Qed.
+
 (** [] *)
 
 (* ################################################################# *)
@@ -278,7 +298,13 @@ Example injection_ex3 : forall (X : Type) (x y z : X) (l j : list X),
   j = z :: l ->
   x = y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j leq1 leq2.
+  injection leq1 as xz ylj.
+  assert (y :: l = z :: l). { rewrite ylj. apply leq2. }
+  injection H as yz.
+  transitivity z. apply xz. symmetry. apply yz.
+Qed.
+
 (** [] *)
 
 (** So much for injectivity of constructors.  What about disjointness? *)
@@ -328,7 +354,10 @@ Example discriminate_ex3 :
     x :: y :: l = [] ->
     x = z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j contra.
+  discriminate contra.
+Qed.
+
 (** [] *)
 
 (** For a slightly more involved example, we can use [discriminate] to
@@ -337,7 +366,7 @@ Proof.
 Theorem eqb_0_l : forall n,
    0 =? n = true -> n = 0.
 Proof.
-  intros n.
+  intros n. 
 
 (** We can proceed by case analysis on [n]. The first case is
     trivial. *)
@@ -593,7 +622,15 @@ Proof.
 Theorem eqb_true : forall n m,
   n =? m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intro n. induction n as [|n' IHn'].
+  - intros m. destruct m as [|m'].
+    + reflexivity.
+    + intros H. simpl in H. discriminate H.
+  - intros m eq. destruct m as [|m'] eqn: E.
+    + simpl in eq. discriminate eq.
+    + apply f_equal. apply IHn'. simpl in eq. apply eq.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (eqb_true_informal)
@@ -616,7 +653,18 @@ Theorem plus_n_n_injective : forall n m,
   n + n = m + m ->
   n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intro n. induction n as [|n' IHn'].
+  - intros m eq. destruct m as [|m'].
+    + reflexivity.
+    + simpl in eq. discriminate eq.
+  - intros m eq. destruct m as [|m'].
+    + simpl in eq. discriminate eq.
+    + apply f_equal.
+      simpl in eq. rewrite <- plus_n_Sm in eq.
+      rewrite <- plus_n_Sm in eq.
+      injection eq. apply IHn'.
+Qed.
+    
 (** [] *)
 
 (** The strategy of doing fewer [intros] before an [induction] to
@@ -723,7 +771,17 @@ Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
   length l = n ->
   nth_error l n = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n X l. 
+  generalize dependent n.
+  induction l as [|e l' IHl'].
+  - intros n eq. destruct n.
+    + reflexivity. 
+    + discriminate eq.
+  - intros n eq. destruct n as [|n'].
+    + discriminate eq.
+    + simpl. simpl in eq. apply IHl'. injection eq as H. apply H.
+Qed.
+
 (** [] *)
 
 (* ################################################################# *)
@@ -905,10 +963,31 @@ Fixpoint split {X Y : Type} (l : list (X*Y))
 (** Prove that [split] and [combine] are inverses in the following
     sense: *)
 
+Lemma equal_head_equal_tail : forall X (l1 l2 : list X) (e : X),
+    l1 = l2 -> e :: l1 = e :: l2.
+Proof.
+  intros X l1 l2 e H.
+  rewrite H. reflexivity.
+Qed.
+
 Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
+  intros X Y l.
+  induction l as [|e l' IHl'].
+  - intros l1 l2 leq. simpl in leq. injection leq as H1 H2.
+    rewrite <- H1. rewrite <- H2. reflexivity.
+  - intros l1 l2 leq. destruct l1, l2. simpl in leq. destruct e in leq. destruct split in leq.
+    discriminate leq. simpl in leq. destruct e in leq. destruct split in leq. discriminate leq.
+    simpl in leq. destruct e in leq. destruct split in leq. discriminate leq. 
+    simpl. destruct e eqn:E1. simpl in leq. destruct split eqn:E in leq. injection leq as H1 H2.
+    rewrite <- H. rewrite H1. 
+    rewrite H1 in E1. rewrite <- E1. 
+    apply equal_head_equal_tail. apply IHl'.
+    rewrite H2 in E. rewrite H0 in E. apply E.
+Qed.
+
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
