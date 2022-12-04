@@ -685,19 +685,43 @@ Qed.
 Theorem iff_refl : forall P : Prop,
   P <-> P.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P. split. 
+  - intros HP. apply HP.
+  - intros HP. apply HP.
+Qed.
 
 Theorem iff_trans : forall P Q R : Prop,
   (P <-> Q) -> (Q <-> R) -> (P <-> R).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P Q R PiffQ QiffR.
+  destruct PiffQ as [PQ QP].
+  destruct QiffR as [QR RQ].
+  split. 
+  - intros HP. apply QR. apply PQ. apply HP.
+  - intros HR. apply QP. apply RQ. apply HR.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (or_distributes_over_and) *)
 Theorem or_distributes_over_and : forall P Q R : Prop,
   P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P Q R. split.
+  - intros PorQandR. split. 
+    + destruct PorQandR as [PQ | HR].
+      left. apply PQ. right. destruct HR as [HQ _]. apply HQ.
+    + destruct PorQandR as [HP | HQR].
+      * left. apply HP.
+      * right. destruct HQR as [_ HR]. apply HR.
+  - intros PorQandPorR. destruct PorQandPorR as [PQ PR].
+    destruct PQ as [HP | HQ].
+    + left. apply HP.
+    + destruct PR as [HP | HR].
+      * left. apply HP.
+      * right. split. apply HQ. apply HR.
+Qed.        
+    
 (** [] *)
 
 (* ================================================================= *)
