@@ -148,11 +148,11 @@ Qed.
 Example and_exercise :
   forall n m : nat, n + m = 0 -> n = 0 /\ m = 0.
 Proof.
-  intros m n H. split.
-  destruct m.
+  intros n m H. split.
+  destruct n.
   - reflexivity.
   - discriminate H.
-  - destruct n.
+  - destruct m.
     + reflexivity.
     + rewrite add_comm in H. discriminate H.
 Qed.
@@ -401,7 +401,7 @@ Proof.
 
 (** **** Exercise: 2 stars, standard, optional (not_implies_our_not)
 
-    Show that Coq's definition of negation implies the intuitive one
+    Show that Coq's defi    nition of negation implies the intuitive one
     mentioned above. Hint: while getting accustomed to Coq's
     definition of [not], you might find it helpful to [unfold not]
     near the beginning of proofs. *)
@@ -694,11 +694,9 @@ Theorem iff_trans : forall P Q R : Prop,
   (P <-> Q) -> (Q <-> R) -> (P <-> R).
 Proof.
   intros P Q R PiffQ QiffR.
-  destruct PiffQ as [PQ QP].
-  destruct QiffR as [QR RQ].
-  split. 
-  - intros HP. apply QR. apply PQ. apply HP.
-  - intros HR. apply QP. apply RQ. apply HR.
+  split.
+  - intros HP. apply QiffR. apply PiffQ. apply HP.
+  - intros HR. apply PiffQ. apply QiffR. apply HR.
 Qed.
 
 (** [] *)
@@ -720,7 +718,7 @@ Proof.
     + destruct PR as [HP | HR].
       * left. apply HP.
       * right. split. apply HQ. apply HR.
-Qed.        
+Qed.
     
 (** [] *)
 
@@ -831,8 +829,12 @@ Proof.
 Theorem dist_not_exists : forall (X:Type) (P : X -> Prop),
   (forall x, P x) -> ~ (exists x, ~ P x).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X P H.
+  unfold not.
+  intros [x E].
+  apply E in H.
+  apply H.
+Qed.
 
 (** **** Exercise: 2 stars, standard (dist_exists_or)
 
@@ -842,8 +844,17 @@ Proof.
 Theorem dist_exists_or : forall (X:Type) (P Q : X -> Prop),
   (exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
 Proof.
-   (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X P Q.
+  split.
+  intros [e H].
+  destruct H as [A | B].
+  left.
+  exists e. apply A.
+  right. exists e. apply B.
+  intros [[e H] | [e H]].
+  exists e. left. apply H.
+  exists e. right. apply H.
+Qed.  
 
 (** **** Exercise: 3 stars, standard, optional (leb_plus_exists) *)
 Theorem leb_plus_exists : forall n m, n <=? m = true -> exists x, m = n+x.
@@ -905,7 +916,7 @@ Qed.
 
 (** We can also prove more generic, higher-level lemmas about [In]. *)
 
-(** (Note how [In] starts out applied to a variable and only
+(** (Note how [qIn] starts out applied to a variable and only
     gets expanded when we do case analysis on this variable.) *)
 
 Theorem In_map :
